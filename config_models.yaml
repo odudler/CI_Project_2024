@@ -1,0 +1,13 @@
+args:
+  training:
+    random_state: 1337
+    n_users: 10000
+    n_movies: 1000
+    test_set_size: 0.1
+    verbose: True
+
+  SVDplusplus:
+    n_factors: 20
+    lr_all: 0.007
+    n_epochs: 20
+    reg_all: 0.02
