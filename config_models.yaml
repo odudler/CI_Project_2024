@@ -1,3 +1,14 @@
+######################################################
+# Config File including all arguments for training and evaluation of any model
+# "training": general training arguments
+# "evaluation:" general evaluation arguments
+# "model_name:" arguments for initializing specific model
+#
+
+#TODO: Currently parameters are default values
+#   We should use existing values from prior students and perform gridsearch with similar working 
+#   values to confirm their values or find even better ones.
+
 args:
   training:
     random_state: 1337
@@ -5,6 +16,9 @@ args:
     n_movies: 1000
     test_set_size: 0.1
     verbose: True
+
+  evaluation:
+    pass: Null
 
   SVDplusplus:
     n_factors: 20
