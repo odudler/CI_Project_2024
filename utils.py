@@ -137,3 +137,26 @@ def read_config(config_path):
     args.svdpp.reg_all = config['args']['SVDplusplus']['reg_all']
 
     return args
+
+def set_args(params, model_name, config_path='config_models.yaml'):
+    with open(config_path, 'r') as file:
+        config = yaml.safe_load(file.read())
+    
+    args = argparse.Namespace()
+
+    #General training arguments
+    args.random_state = config['args']['training']['random_state']
+    args.n_users = config['args']['training']['n_users']
+    args.n_movies = config['args']['training']['n_movies']
+    args.test_set_size = config['args']['training']['test_set_size']
+    args.verbose = config['args']['training']['verbose']
+
+    if model_name == "SVDplusplus":
+        args.svdpp = argparse.Namespace()
+        args.svdpp.n_factors = params['n_factors']
+        args.svdpp.lr_all = params['lr_all']
+        args.svdpp.n_epochs = params['n_epochs']
+        args.svdpp.reg_all = params['reg_all']
+
+    return args
+

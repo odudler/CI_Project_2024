@@ -1,0 +1,7 @@
+# Yaml file containing the parameters for performing grid-search for each model
+
+SVDplusplus:
+  n_factors: [3, 10]
+  lr_all: [0.003, 0.005, 0.007]
+  n_epochs: [10, 50, 100]
+  reg_all: [0.01, 0.05, 0.08]

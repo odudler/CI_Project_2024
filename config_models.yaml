@@ -15,7 +15,7 @@ args:
     n_users: 10000
     n_movies: 1000
     test_set_size: 0.1
-    verbose: True
+    verbose: False
 
   evaluation:
     pass: Null

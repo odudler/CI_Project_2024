@@ -28,7 +28,7 @@ class SVDplusplus:
         svdpp.fit(trainset)
         self.model = svdpp
 
-    def predict(self, df, output_file = None):
+    def predict(self, df, output_file = None, return_loss=False):
         users, movies, labels = extract_users_items_predictions(df)
         predictions = np.empty(len(labels))
         
@@ -38,6 +38,10 @@ class SVDplusplus:
         if output_file is not None:
             create_submission_from_array(predictions, users, movies, output_file)
         
-        print(f"RMSE for {self.__class__.__name__}: {calculate_rmse(predictions, labels)}")
+        loss = calculate_rmse(predictions, labels)
+        if return_loss:
+            return loss
+        else:
+            print(f"RMSE for {self.__class__.__name__}: {loss}")
 
 
