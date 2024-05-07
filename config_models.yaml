@@ -21,7 +21,7 @@ args:
     pass: Null
 
   SVDplusplus:
-    n_factors: 20
-    lr_all: 0.007
-    n_epochs: 20
-    reg_all: 0.02
+    n_factors: 3
+    lr_all: 0.003
+    n_epochs: 100
+    reg_all: 0.05

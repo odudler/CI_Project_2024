@@ -1,7 +1,7 @@
 import math
 import pandas as pd
 import numpy as np
-import tqdm
+from tqdm import tqdm
 from surprise import SVDpp
 from utils import *
 
@@ -33,10 +33,10 @@ class SVDplusplus:
         predictions = np.empty(len(labels))
         
         for i in tqdm(range(len(users)), desc = "Prediction Loop"):
-            predictions[i] = self.model.predict(users[i], movies[i], verbose=self.verbose)
+            predictions[i] = self.model.predict(users[i], movies[i], verbose=self.verbose).est
 
         if output_file is not None:
-            create_submission_from_array(predictions)
+            create_submission_from_array(predictions, users, movies, output_file)
         
         print(f"RMSE for {self.__class__.__name__}: {calculate_rmse(predictions, labels)}")
 

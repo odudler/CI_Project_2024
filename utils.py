@@ -52,17 +52,15 @@ def create_data_matrix(users, movies, predictions, num_users=10000, num_movies=1
     matrix[users, movies] = predictions.astype(np.float16)
     return matrix
 
-def create_submission_from_matrix(data_matrix, sub_sample_path='data/sampleSubmission.csv', store_path='submissions/default.csv'):
+def create_submission_from_matrix(data_matrix, users, movies, store_path='submissions/default.csv'):
     """
     Parameters:
-        sub_sample_path (String): Path to sample submission file ("sampleSubmission.csv")
+        users (np.array): List of user IDs to predict rating of
+        movies (np.array): List of movie IDs to predict rating of
         store_path (String): Path to store submission file
-        data_matrix (np.ndarray): Data matrix containing the predictions
+        data_matrix (np.ndarray): Data matrix containing rating predictions
     """
-    df = pd.read_csv(sub_sample_path)
-    users, movies, _ = extract_users_items_predictions(df)
-    nrows = df.shape[0]
-
+    
     df_sub = pd.DataFrame(columns=['row', 'col', 'pred'])
     df_sub['row'] = users + 1
     df_sub['col'] = movies + 1
@@ -76,30 +74,27 @@ def create_submission_from_matrix(data_matrix, sub_sample_path='data/sampleSubmi
     df_sub = df_sub.drop(['row', 'col'], axis=1)
     df_sub.to_csv(store_path, columns=['entry', 'pred'], index=False)
 
-def create_submission_from_array(predictions, sub_sample_path='data/sampleSubmission.csv', store_path='submissions/default.csv'):
+def create_submission_from_array(predictions, users, movies, store_path='submissions/default.csv'):
     """
     Parameters:
-        sub_sample_path (String): Path to sample submission file ("sampleSubmission.csv")
+        users (np.array): List of user IDs to predict rating of
+        movies (np.array): List of movie IDs to predict rating of
         store_path (String): Path to store submission file
         predictions (np.array): Array containing rating predictions
     """
     hi = "hello"
-    df = pd.read_csv(sub_sample_path)
-    users, movies, _ = extract_users_items_predictions(df)
-    nrows = df.shape[0]
 
     df_sub = pd.DataFrame(columns=['row', 'col', 'pred'])
     df_sub['row'] = users + 1
     df_sub['col'] = movies + 1
-    data_matrix = np.clip(data_matrix, 1, 5)
-    df_sub['pred'] = predictions
+    df_sub['Prediction'] = predictions
 
     def construct_submission_format(df):
         return f"r{df['row']:.0f}_c{df['col']:.0f}"
 
-    df_sub['entry'] = df_sub.apply(construct_submission_format, axis=1)
+    df_sub['Id'] = df_sub.apply(construct_submission_format, axis=1)
     df_sub = df_sub.drop(['row', 'col'], axis=1)
-    df_sub.to_csv(store_path, columns=['entry', 'pred'], index=False)
+    df_sub.to_csv(store_path, columns=['Id', 'Prediction'], index=False)
 
 
 def calculate_rmse(preds, labels):
