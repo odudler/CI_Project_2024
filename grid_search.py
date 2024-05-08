@@ -7,12 +7,24 @@ from models import *
 from utils import *
 
 def load_yaml_parameters(filepath):
+    '''
+    Parameters:
+        filepath (String): Path to file containing parameters
+    Returns:
+        data (dict): Contains all parameters 
+    '''
     with open(filepath, 'r') as file:
         data = yaml.safe_load(file)
     return data
 
 # Generate all parameter combinations
 def generate_param_combinations(param_grid):
+    '''
+    Parameters:
+        param_grid (dict): contains all the parameters for the grid search
+    Returns:
+        Iterator over all possible combinations of parameters 
+    '''
     keys = param_grid.keys()
     values = (param_grid[key] for key in keys)
     for instance in product(*values):
@@ -20,6 +32,13 @@ def generate_param_combinations(param_grid):
 
 #Get the proper model
 def get_model(model_name, args):
+    '''
+    Parameters:
+        model_name (String): Represents name of model we want to initialize
+        args (argparse.Namespace): contains initalization arguments
+    Returns:
+        instance of a model of type "model_name" init. with args
+    '''
     if model_name == "SVDplusplus":
         return SVDplusplus(args)
     elif model_name == "SVDsimple":
@@ -30,13 +49,21 @@ def get_model(model_name, args):
 
 # Perform k-fold cross-validation for each parameter combination
 def perform_grid_search(model_name, data, config_file, n_splits=5):
+    '''
+    Parameters:
+        model_name(String): Represents name of model used
+        data (df): Data to perform K-Fold cross-val. on
+        config_file (String): path to grid-search parameters
+    Returns:
+        best_params (dict): Parameters leading to best score
+        best_score (float): Best (lowest) achieved score
+    '''
     config = load_yaml_parameters(config_file)
 
     kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
     best_score = float('inf')
     best_params = None
     
-
     for params in generate_param_combinations(config[model_name]):
         print(f"Testing {params}")
         scores = []
