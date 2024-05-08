@@ -20,8 +20,19 @@ args:
   evaluation:
     pass: Null
 
-  SVDplusplus:
+  SVDplusplus: #Achieves about 1.15 score
     n_factors: 3
     lr_all: 0.003
     n_epochs: 100
     reg_all: 0.05
+
+  SVDsimple: #Achieves about 1.14 score
+    n_factors: 30
+    lr_all: 0.002
+    n_epochs: 20
+    reg_all: 0.1
+
+  KNN: #Achieves about 1.13 score
+    k: 150
+    min_k: 20
+    sim_options: {"name": "pearson_baseline", "shrinkage": 10}

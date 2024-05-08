@@ -22,13 +22,14 @@ def generate_param_combinations(param_grid):
 def get_model(model_name, args):
     if model_name == "SVDplusplus":
         return SVDplusplus(args)
-    elif model_name == "":
-        return None
+    elif model_name == "SVDsimple":
+        return SVDsimple(args)
+    elif model_name == "KNN":
+        return KNN(args)
 
 
 # Perform k-fold cross-validation for each parameter combination
 def perform_grid_search(model_name, data, config_file, n_splits=5):
-
     config = load_yaml_parameters(config_file)
 
     kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
@@ -45,7 +46,9 @@ def perform_grid_search(model_name, data, config_file, n_splits=5):
             model = get_model(model_name, args)
             model.train(train_data)
             score = model.predict(test_data, return_loss=True)
+            #print(f"Score: {score}")
             scores.append(score)
+            break #only do one fold for now, for computational reasons
 
         avg_score = np.mean(scores)
         if avg_score < best_score:

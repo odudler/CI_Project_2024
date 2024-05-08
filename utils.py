@@ -136,9 +136,33 @@ def read_config(config_path):
     args.svdpp.n_epochs = config['args']['SVDplusplus']['n_epochs']
     args.svdpp.reg_all = config['args']['SVDplusplus']['reg_all']
 
+    #SVD arguments
+    args.svd = argparse.Namespace()
+    args.svd.n_factors = config['args']['SVDsimple']['n_factors']
+    args.svd.lr_all = config['args']['SVDsimple']['lr_all']
+    args.svd.n_epochs = config['args']['SVDsimple']['n_epochs']
+    args.svd.reg_all = config['args']['SVDsimple']['reg_all']
+
+    #KNN arguments
+    args.knn = argparse.Namespace()
+    args.knn.k = config['args']['KNN']['k']
+    args.knn.min_k = config['args']['KNN']['min_k']
+    args.knn.sim_options = config['args']['KNN']['sim_options']
+
     return args
 
 def set_args(params, model_name, config_path='config_models.yaml'):
+    """
+    This function sets the arguments to be passed into the initialization function of a model
+    
+    Parameters:
+        params (dict): arguments for model initialization
+        model_name (String): Name of the model to be initialized
+        config_path (String): path to the config to load
+    
+    Returns:
+        args: arguments to be passed into model initialization 
+    """
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file.read())
     
@@ -157,6 +181,19 @@ def set_args(params, model_name, config_path='config_models.yaml'):
         args.svdpp.lr_all = params['lr_all']
         args.svdpp.n_epochs = params['n_epochs']
         args.svdpp.reg_all = params['reg_all']
+
+    if model_name == "SVDsimple":
+        args.svd = argparse.Namespace()
+        args.svd.n_factors = params['n_factors']
+        args.svd.lr_all = params['lr_all']
+        args.svd.n_epochs = params['n_epochs']
+        args.svd.reg_all = params['reg_all']
+    
+    if model_name == "KNN":
+        args.knn = argparse.Namespace()
+        args.knn.k = params['k']
+        args.knn.min_k = params['min_k']
+        args.knn.sim_options = params['sim_options']
 
     return args
 

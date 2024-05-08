@@ -5,3 +5,14 @@ SVDplusplus:
   lr_all: [0.003, 0.005, 0.007]
   n_epochs: [10, 50, 100]
   reg_all: [0.01, 0.05, 0.08]
+
+SVDsimple:
+  n_factors: [3, 15]
+  lr_all: [0.003, 0.005, 0.007]
+  n_epochs: [10, 50, 100]
+  reg_all: [0.01, 0.05, 0.08]
+
+KNN:
+  k: [40, 60, 100, 150]
+  min_k: [5, 10, 20]
+  sim_options: [{"name": "pearson_baseline", "shrinkage": 1}, {"name": "pearson_baseline", "shrinkage": 10}]
