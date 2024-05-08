@@ -3,42 +3,44 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from surprise import SVDpp, SVD, KNNWithZScore
-from utils import *
+from utils import (
+    prepare_data_for_surprise,
+    extract_users_items_predictions,
+    create_submission_from_array,
+    calculate_rmse,
+)
+
 
 class SVDplusplus:
     def __init__(self, args):
-        self.n_factors = args.svdpp.n_factors
-        self.lr_all = args.svdpp.lr_all
-        self.reg_all = args.svdpp.reg_all
-        self.n_epochs = args.svdpp.n_epochs
+        self.svdpp_args = args.svdpp
         self.verbose = args.verbose
         self.random_state = args.random_state
-        
+
     def train(self, df):
         dataset = prepare_data_for_surprise(df)
         trainset = dataset.build_full_trainset()
         svdpp = SVDpp(
-            n_factors = self.n_factors,
-            lr_all = self.lr_all,
-            reg_all = self.reg_all,
-            n_epochs = self.n_epochs,
-            verbose = self.verbose,
-            random_state = self.random_state,
-            cache_ratings = True #Should speed up computation
+            **self.svdpp_args.__dict__,
+            verbose=self.verbose,
+            random_state=self.random_state,
+            cache_ratings=True,  # Should speed up computation
         )
         svdpp.fit(trainset)
         self.model = svdpp
 
-    def predict(self, df, output_file = None, return_loss=False):
+    def predict(self, df, output_file=None, return_loss=False):
         users, movies, labels = extract_users_items_predictions(df)
         predictions = np.empty(len(labels))
-        
-        for i in tqdm(range(len(users)), desc = "Prediction Loop"):
-            predictions[i] = self.model.predict(users[i], movies[i], verbose=self.verbose).est
+
+        for i in tqdm(range(len(users)), desc="Prediction Loop"):
+            predictions[i] = self.model.predict(
+                users[i], movies[i], verbose=self.verbose
+            ).est
 
         if output_file is not None:
             create_submission_from_array(predictions, users, movies, output_file)
-        
+
         loss = calculate_rmse(predictions, labels)
         if return_loss:
             return loss
@@ -49,37 +51,33 @@ class SVDplusplus:
 
 class SVDsimple:
     def __init__(self, args):
-        self.n_factors = args.svd.n_factors
-        self.lr_all = args.svd.lr_all
-        self.reg_all = args.svd.reg_all
-        self.n_epochs = args.svd.n_epochs
+        self.svd_args = args.svd
         self.verbose = args.verbose
         self.random_state = args.random_state
-        
+
     def train(self, df):
         dataset = prepare_data_for_surprise(df)
         trainset = dataset.build_full_trainset()
         svd = SVD(
-            n_factors = self.n_factors,
-            lr_all = self.lr_all,
-            reg_all = self.reg_all,
-            n_epochs = self.n_epochs,
-            verbose = self.verbose,
-            random_state = self.random_state
+            **self.svd_args.__dict__,
+            verbose=self.verbose,
+            random_state=self.random_state,
         )
         svd.fit(trainset)
         self.model = svd
 
-    def predict(self, df, output_file = None, return_loss=False):
+    def predict(self, df, output_file=None, return_loss=False):
         users, movies, labels = extract_users_items_predictions(df)
         predictions = np.empty(len(labels))
-        
-        for i in tqdm(range(len(users)), desc = "Prediction Loop"):
-            predictions[i] = self.model.predict(users[i], movies[i], verbose=self.verbose).est
+
+        for i in tqdm(range(len(users)), desc="Prediction Loop"):
+            predictions[i] = self.model.predict(
+                users[i], movies[i], verbose=self.verbose
+            ).est
 
         if output_file is not None:
             create_submission_from_array(predictions, users, movies, output_file)
-        
+
         loss = calculate_rmse(predictions, labels)
         if return_loss:
             return loss
@@ -90,33 +88,28 @@ class SVDsimple:
 
 class KNN:
     def __init__(self, args):
-        self.k = args.knn.k
-        self.min_k = args.knn.min_k
-        self.sim_options = args.knn.sim_options
+        self.knn_args = args.knn
         self.verbose = args.verbose
 
     def train(self, df):
         dataset = prepare_data_for_surprise(df)
         trainset = dataset.build_full_trainset()
-        knn = KNNWithZScore(
-            k = self.k,
-            min_k = self.min_k,
-            sim_options = self.sim_options,
-            verbose = self.verbose
-        )
+        knn = KNNWithZScore(**self.knn_args.__dict__, verbose=self.verbose)
         knn.fit(trainset)
         self.model = knn
 
-    def predict(self, df, output_file = None, return_loss=False):
+    def predict(self, df, output_file=None, return_loss=False):
         users, movies, labels = extract_users_items_predictions(df)
         predictions = np.empty(len(labels))
-        
-        for i in tqdm(range(len(users)), desc = "Prediction Loop"):
-            predictions[i] = self.model.predict(users[i], movies[i], verbose=self.verbose).est
+
+        for i in tqdm(range(len(users)), desc="Prediction Loop"):
+            predictions[i] = self.model.predict(
+                users[i], movies[i], verbose=self.verbose
+            ).est
 
         if output_file is not None:
             create_submission_from_array(predictions, users, movies, output_file)
-        
+
         loss = calculate_rmse(predictions, labels)
         if return_loss:
             return loss
