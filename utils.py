@@ -85,7 +85,7 @@ def create_submission_from_matrix(
 
     df_sub["entry"] = df_sub.apply(construct_submission_format, axis=1)
     df_sub = df_sub.drop(["row", "col"], axis=1)
-    df_sub.to_csv(store_path, columns=["entry", "pred"], index=False)
+    df_sub.to_csv(store_path, columns=["Id", "Prediction"], index=False)
 
 
 def create_submission_from_array(
