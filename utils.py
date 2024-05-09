@@ -26,6 +26,13 @@ def extract_users_items_predictions(df):
     predictions = df.Prediction.values
     return users, movies, predictions
 
+def prepate_data_for_recommender(df):
+    users, movies, predictions = extract_users_items_predictions(df)
+    df_recommender = pd.DataFrame({
+        'itemID': movies,
+        'userID': users,
+        'rating': predictions
+    })
 
 def prepare_data_for_surprise(df):
     """
