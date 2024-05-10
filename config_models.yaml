@@ -38,7 +38,9 @@ args:
     sim_options: {"name": "pearson_baseline", "shrinkage": 10}
 
   NeuralCF:
+    model_type: "NeuMF"
+    n_factors: 4
+    layer_sizes: [16,8,4]
     n_epochs: 50
     batch_size: 256
-    n_factors: 4
-    lr: 0.001
+    learning_rate: 0.001
