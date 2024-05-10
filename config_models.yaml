@@ -39,8 +39,8 @@ args:
 
   NeuralCF:
     model_type: "NeuMF"
-    n_factors: 4
+    n_factors: 5
     layer_sizes: [16,8,4]
-    n_epochs: 50
+    n_epochs: 60
     batch_size: 256
     learning_rate: 0.001

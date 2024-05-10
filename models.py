@@ -160,7 +160,7 @@ class NeuralCF:
 
         reconstructed = np.zeros((self.n_users, self.n_movies))
         idx = 0
-        for i, j in IT.izip(users, movies):
+        for i, j in zip(users, movies):
             reconstructed[i,j] = predictions[idx] = self.model.predict(i,j)
             idx+=1
         reconstructed = denormalize_columns(reconstructed, self.mean, self.std)

@@ -8,7 +8,6 @@ import argparse
 import yaml
 from recommenders.models.ncf.dataset import Dataset as NCFDataset
 
-
 def extract_users_items_predictions(df):
     """
     Parameters:
@@ -132,7 +131,6 @@ def create_submission_from_array(
     df_sub["Id"] = df_sub.apply(construct_submission_format, axis=1)
     df_sub = df_sub.drop(["row", "col"], axis=1)
     df_sub.to_csv(store_path, columns=["Id", "Prediction"], index=False)
-
 
 def calculate_rmse(preds, labels):
     """

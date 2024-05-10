@@ -47,7 +47,8 @@ def get_model(model_name, args):
         return KNN(args)
     elif model_name == "NeuralCF":
         return NeuralCF(args)
-
+    else:
+        raise ValueError(f"Model: {model_name} doesn't exist")
 
 # Perform k-fold cross-validation for each parameter combination
 def perform_grid_search(model_name, data, config_file, n_splits=5):
