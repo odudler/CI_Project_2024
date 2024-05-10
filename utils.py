@@ -6,6 +6,7 @@ from sklearn.metrics import mean_squared_error
 from surprise import Reader, Dataset
 import argparse
 import yaml
+from recommenders.models.ncf.dataset import Dataset as NCFDataset
 
 
 def extract_users_items_predictions(df):
@@ -26,13 +27,33 @@ def extract_users_items_predictions(df):
     predictions = df.Prediction.values
     return users, movies, predictions
 
-def prepate_data_for_recommender(df):
+def prepare_data_for_recommender(df, n_users, n_movies, file_path):
     users, movies, predictions = extract_users_items_predictions(df)
-    df_recommender = pd.DataFrame({
+    data_matrix = create_data_matrix(users, movies, predictions)
+    data_normalized, mean, std = normalize_columns(data_matrix, n_users, n_movies)
+    predictions_normalized = data_normalized[users, movies]
+    df_new = pd.DataFrame({
         'itemID': movies,
         'userID': users,
-        'rating': predictions
+        'rating': predictions_normalized
     })
+    df_new.sort_values(by=['userID'], inplace=True)
+    df_new.to_csv(file_path)
+
+    return mean, std
+    
+
+def normalize_columns(data, n_users, n_movies):
+    mask = np.ma.masked_equal(data, 0)
+    # to check: mean along row / col have effects on results?
+    mean = np.tile(np.ma.mean(mask, axis=0).data, (n_users, 1))
+    std = np.tile(np.ma.std(mask, axis=0).data, (n_users, 1))
+    data_normalized = ((mask - mean) / std).data
+    return data_normalized, mean, std
+
+def denormalize_columns(data, mean, std):
+    return np.clip(data * std + mean, 1, 5)
+    
 
 def prepare_data_for_surprise(df):
     """
@@ -78,12 +99,12 @@ def create_submission_from_matrix(
     df_sub["row"] = users + 1
     df_sub["col"] = movies + 1
     data_matrix = np.clip(data_matrix, 1, 5)
-    df_sub["pred"] = data_matrix[users, movies]
+    df_sub["Prediction"] = data_matrix[users, movies]
 
     def construct_submission_format(df):
         return f"r{df['row']:.0f}_c{df['col']:.0f}"
 
-    df_sub["entry"] = df_sub.apply(construct_submission_format, axis=1)
+    df_sub["Id"] = df_sub.apply(construct_submission_format, axis=1)
     df_sub = df_sub.drop(["row", "col"], axis=1)
     df_sub.to_csv(store_path, columns=["Id", "Prediction"], index=False)
 
@@ -141,6 +162,7 @@ def read_config(config_path):
         svdpp=argparse.Namespace(**(config["args"]["SVDplusplus"] or {})),
         svd=argparse.Namespace(**(config["args"]["SVDsimple"] or {})),
         knn=argparse.Namespace(**(config["args"]["KNN"] or {})),
+        ncf=argparse.Namespace(**(config["args"]["NeuralCF"] or {})),
         **(config["args"]["training"] or {}),
     )
 
@@ -188,6 +210,13 @@ def set_args(params, model_name, config_path="config_models.yaml"):
         args.knn.k = params["k"]
         args.knn.min_k = params["min_k"]
         args.knn.sim_options = params["sim_options"]
+
+    if model_name == "NeuralCF":
+        args.ncf = argparse.Namespace()
+        args.ncf.n_epochs = params["n_epochs"]
+        args.ncf.batch_size = params["batch_size"]
+        args.ncf.n_factors = params["n_factors"]
+        args.ncf.lr = params["lr"]
 
     return args
 

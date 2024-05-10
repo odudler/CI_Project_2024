@@ -16,3 +16,9 @@ KNN:
   k: [40, 60, 100, 150]
   min_k: [5, 10, 20]
   sim_options: [{"name": "pearson_baseline", "shrinkage": 1}, {"name": "pearson_baseline", "shrinkage": 10}]
+
+NeuralCF:
+  n_epochs: [50]
+  batch_size: [256]
+  n_factors: [4]
+  lr: [0.001]
