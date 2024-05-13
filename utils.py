@@ -211,10 +211,12 @@ def set_args(params, model_name, config_path="config_models.yaml"):
 
     if model_name == "NeuralCF":
         args.ncf = argparse.Namespace()
+        args.ncf.model_type = params['model_type']
+        args.ncf.n_factors = params["n_factors"]
+        args.ncf.layer_sizes = params['layer_sizes']
         args.ncf.n_epochs = params["n_epochs"]
         args.ncf.batch_size = params["batch_size"]
-        args.ncf.n_factors = params["n_factors"]
-        args.ncf.lr = params["lr"]
+        args.ncf.learning_rate = params["learning_rate"]
 
     return args
 

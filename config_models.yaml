@@ -15,16 +15,16 @@ args:
     n_users: 10000
     n_movies: 1000
     test_set_size: 0.1
-    verbose: False
+    verbose: True
 
   evaluation:
     pass: Null
 
   SVDplusplus: #Achieves about 1.15 score
-    n_factors: 3
-    lr_all: 0.003
-    n_epochs: 100
-    reg_all: 0.05
+    n_factors: 5
+    lr_all: 0.002
+    n_epochs: 300
+    reg_all: 0.04
 
   SVDsimple: #Achieves about 1.14 score
     n_factors: 30
@@ -39,8 +39,8 @@ args:
 
   NeuralCF:
     model_type: "NeuMF"
-    n_factors: 5
+    n_factors: 4
     layer_sizes: [16,8,4]
-    n_epochs: 60
+    n_epochs: 100
     batch_size: 256
-    learning_rate: 0.001
+    learning_rate: 0.0015
