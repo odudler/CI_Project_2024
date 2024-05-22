@@ -47,6 +47,8 @@ def get_model(model_name, args):
         return KNN(args)
     elif model_name == "NeuralCF":
         return NeuralCF(args)
+    elif model_name == "BFM":
+        return BFM(args)
     else:
         raise ValueError(f"Model: {model_name} doesn't exist")
 

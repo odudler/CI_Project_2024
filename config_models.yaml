@@ -37,10 +37,18 @@ args:
     min_k: 20
     sim_options: {"name": "pearson_baseline", "shrinkage": 10}
 
-  NeuralCF:
+  NeuralCF: #Achieves about 1.03 score
     model_type: "NeuMF"
     n_factors: 4
     layer_sizes: [16,8,4]
     n_epochs: 100
     batch_size: 256
     learning_rate: 0.0015
+
+  BFM:
+    algorithm: "oprobit"  
+    variational: False    
+    iteration: 1000       
+    dimension: 32         
+    use_iu: True          
+    use_ii: True 

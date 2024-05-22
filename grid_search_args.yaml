@@ -24,3 +24,11 @@ NeuralCF:
   n_epochs: [50,100]
   batch_size: [256]
   learning_rate: [0.001, 0.002]
+
+ BFM:
+    algorithm: ["oprobit"]  
+    variational: [False]    
+    iteration: [1000]       
+    dimension: [32]         
+    use_iu: [True]          
+    use_ii: [True] 

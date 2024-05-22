@@ -25,21 +25,6 @@ def extract_users_items_predictions(df):
     ]
     predictions = df.Prediction.values
     return users, movies, predictions
-
-def prepare_data_for_recommender(df, n_users, n_movies, file_path):
-    users, movies, predictions = extract_users_items_predictions(df)
-    data_matrix = create_data_matrix(users, movies, predictions)
-    data_normalized, mean, std = normalize_columns(data_matrix, n_users, n_movies)
-    predictions_normalized = data_normalized[users, movies]
-    df_new = pd.DataFrame({
-        'itemID': movies,
-        'userID': users,
-        'rating': predictions_normalized
-    })
-    df_new.sort_values(by=['userID'], inplace=True)
-    df_new.to_csv(file_path)
-
-    return mean, std
     
 
 def normalize_columns(data, n_users, n_movies):
@@ -67,6 +52,29 @@ def prepare_data_for_surprise(df):
     )
     return Dataset.load_from_df(df_surprise, reader=Reader(rating_scale=(1, 5)))
 
+def prepare_data_for_recommender(df, n_users, n_movies, file_path):
+    users, movies, predictions = extract_users_items_predictions(df)
+    data_matrix = create_data_matrix(users, movies, predictions)
+    data_normalized, mean, std = normalize_columns(data_matrix, n_users, n_movies)
+    predictions_normalized = data_normalized[users, movies]
+    df_new = pd.DataFrame({
+        'itemID': movies,
+        'userID': users,
+        'rating': predictions_normalized
+    })
+    df_new.sort_values(by=['userID'], inplace=True)
+    df_new.to_csv(file_path)
+
+    return mean, std
+
+def prepare_data_for_BFM(df):
+    users, movies, predictions = extract_users_items_predictions(df)
+    df_new = pd.DataFrame({
+        'user_id': users,
+        'movie_id': movies,
+        'rating': predictions
+    })
+    return df_new
 
 def create_data_matrix(users, movies, predictions, num_users=10000, num_movies=1000):
     """
@@ -118,7 +126,6 @@ def create_submission_from_array(
         store_path (String): Path to store submission file
         predictions (np.array): Array containing rating predictions
     """
-    hi = "hello"
 
     df_sub = pd.DataFrame(columns=["row", "col", "pred"])
     df_sub["row"] = users + 1
@@ -161,6 +168,7 @@ def read_config(config_path):
         svd=argparse.Namespace(**(config["args"]["SVDsimple"] or {})),
         knn=argparse.Namespace(**(config["args"]["KNN"] or {})),
         ncf=argparse.Namespace(**(config["args"]["NeuralCF"] or {})),
+        bfm=argparse.Namespace(**(config["args"]["BFM"] or {})),
         **(config["args"]["training"] or {}),
     )
 
@@ -217,6 +225,16 @@ def set_args(params, model_name, config_path="config_models.yaml"):
         args.ncf.n_epochs = params["n_epochs"]
         args.ncf.batch_size = params["batch_size"]
         args.ncf.learning_rate = params["learning_rate"]
+
+    if model_name == "BFM":
+        args.bfm = argparse.Namespace()
+        args.bfm.algorithm = params['algorithm']
+        args.bfm.variational = params['variational']
+        args.bfm.iteration = params['iteration']
+        args.bfm.dimension = params['dimension']
+        args.bfm.use_iu = params['use_iu']
+        args.bfm.use_ii = params['use_ii']
+
 
     return args
 
