@@ -48,7 +48,7 @@ args:
   BFM: #Achieves about 0.96 score
     algorithm: "oprobit"  
     variational: False    
-    iteration: 2000       
-    dimension: 32         
+    iteration: 2500    
+    dimension: 24       
     use_iu: True          
     use_ii: True 
