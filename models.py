@@ -311,7 +311,7 @@ class BFM:
             target.append(RelationBlock(movie_map, self.augment_movie_id(unique_movies)))
 
         if self.bfm_args.algorithm == "regression":
-            if self.variational:
+            if self.bfm_args.variational:
                 fm = myfm.VariationalFMRegressor(rank=self.bfm_args.dimension, random_seed=self.random_state)
             else:
                 fm = myfm.MyFMRegressor(rank=self.bfm_args.dimension, random_seed=self.random_state)
@@ -327,24 +327,24 @@ class BFM:
         )
         self.fm = fm
 
-    def predict(self, df_test, output_file=None, return_loss= False):
-        df_test = prepare_data_for_BFM(df_test)
-        users = df_test['user_id']
-        movies = df_test['movie_id']
-        labels = df_test['rating']
+    def predict(self, df, output_file=None, return_loss= False):
+        df = prepare_data_for_BFM(df)
+        users = df['user_id']
+        movies = df['movie_id']
+        labels = df['rating']
 
-        test_blocks: List[RelationBlock] = []
-        for source, target in [(df_test, test_blocks)]:
-            unique_users, user_map = np.unique(source.user_id, return_inverse=True)
-            target.append(RelationBlock(user_map, self.augment_user_id(unique_users)))
-            unique_movies, movie_map = np.unique(source.movie_id, return_inverse=True)
-            target.append(RelationBlock(movie_map, self.augment_movie_id(unique_movies)))
+        blocks: List[RelationBlock] = []
+
+        unique_users, user_map = np.unique(df.user_id, return_inverse=True)
+        blocks.append(RelationBlock(user_map, self.augment_user_id(unique_users)))
+        unique_movies, movie_map = np.unique(df.movie_id, return_inverse=True)
+        blocks.append(RelationBlock(movie_map, self.augment_movie_id(unique_movies)))
 
         result = None
         if self.bfm_args.algorithm == "regression":
-            result = (self.fm.predict(None, X_rel = test_blocks)).clip(1, 5)
+            result = (self.fm.predict(None, X_rel=blocks)).clip(1, 5)
         else:
-            result = (self.fm.predict_proba(None, X_rel = test_blocks).dot(np.arange(5)) + 1).clip(1, 5)
+            result = (self.fm.predict_proba(None, X_rel=blocks).dot(np.arange(5)) + 1).clip(1, 5)
 
         if output_file is not None:
             create_submission_from_array(result, users, movies, output_file)

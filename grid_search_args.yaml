@@ -25,10 +25,10 @@ NeuralCF:
   batch_size: [256]
   learning_rate: [0.001, 0.002]
 
- BFM:
-    algorithm: ["oprobit"]  
-    variational: [False]    
-    iteration: [1000]       
-    dimension: [32]         
-    use_iu: [True]          
-    use_ii: [True] 
+BFM:
+  algorithm: ["oprobit", "regression"]  
+  variational: [False]    
+  iteration: [1000, 2000]       
+  dimension: [32, 48]         
+  use_iu: [True]          
+  use_ii: [True] 

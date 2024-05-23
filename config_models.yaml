@@ -45,10 +45,10 @@ args:
     batch_size: 256
     learning_rate: 0.0015
 
-  BFM:
+  BFM: #Achieves about 0.96 score
     algorithm: "oprobit"  
     variational: False    
-    iteration: 1000       
+    iteration: 2000       
     dimension: 32         
     use_iu: True          
     use_ii: True 
