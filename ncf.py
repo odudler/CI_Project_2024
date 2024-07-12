@@ -158,12 +158,12 @@ class NFC():
         print("Number of parameters:", num_params)
         return model
 
-    def load_model(self):
-        model_path = os.path.join(self.checkpoint_dir, "best_model.pth")
+    def load_model(self, file_name):
+        model_path = os.path.join(self.checkpoint_dir, f"{file_name}.pth")
         self.model.load_state_dict(torch.load(model_path))
 
-    def save_model(self):
-        model_path = os.path.join(self.checkpoint_dir, "best_model.pth")
+    def save_model(self, file_name):
+        model_path = os.path.join(self.checkpoint_dir, f"{file_name}.pth")
         torch.save(self.model.state_dict(), model_path)
 
     def train_epoch(self, dataloader):
@@ -231,7 +231,8 @@ class NFC():
             rmse = self.evaluate(test_loader)
             if rmse < best_rmse:
                 best_rmse = rmse
-                self.save_model()
+                self.save_model("best_model")
+            self.save_model("last_model")
 
     def evaluate(self, dataloader):
         if len(dataloader) == 0:
