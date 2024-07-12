@@ -6,7 +6,6 @@ from sklearn.metrics import mean_squared_error
 from surprise import Reader, Dataset
 import argparse
 import yaml
-from recommenders.models.ncf.dataset import Dataset as NCFDataset
 
 def extract_users_items_predictions(df):
     """
