@@ -35,7 +35,7 @@ class GMF(nn.Module):
             assert user_interaction_matrix is not None and item_interaction_matrix is not None
             self.user_interaction_matrix = user_interaction_matrix
             self.item_interaction_matrix = item_interaction_matrix
-        self.out_dim = 2 * embed_dim if include_adjacent else embed_dim
+        self.out_dim = 4 * embed_dim if include_adjacent else embed_dim
 
     def forward(self, users, items):
         user_embeds = self.user_embed(users)
@@ -43,12 +43,18 @@ class GMF(nn.Module):
         if not self.include_adjacent:
             return user_embeds * item_embeds
 
-        adjacent_user_embeds = self.item_interaction_matrix[:,items].T @ self.user_embed.weight
-        adjacent_item_embeds = self.user_interaction_matrix[users,:] @ self.item_embed.weight
+        item_interaction_matrix = self.item_interaction_matrix[:,items]
+        item_interaction_matrix[users, torch.arange(len(items))] = 0.
+        user_interaction_matrix = self.user_interaction_matrix[users,:]
+        user_interaction_matrix[torch.arange(len(users)), items] = 0.
+        adjacent_user_embeds = item_interaction_matrix.T @ self.user_embed.weight
+        adjacent_item_embeds = user_interaction_matrix @ self.item_embed.weight
 
         embeds = user_embeds * item_embeds
         adjacent_embeds = adjacent_user_embeds * adjacent_item_embeds
-        return torch.cat((embeds, adjacent_embeds), dim=1)
+        user_adj_embeds = user_embeds * adjacent_user_embeds
+        item_adj_embeds = item_embeds * adjacent_item_embeds
+        return torch.cat((embeds, adjacent_embeds, user_adj_embeds, item_adj_embeds), dim=1)
 
 class MLP(nn.Module):
     def __init__(self, num_users, num_items, embed_dim, hidden_dims: list[int], include_adjacent=False, user_interaction_matrix=None, item_interaction_matrix=None):
@@ -78,9 +84,13 @@ class MLP(nn.Module):
             for i in range(len(self.fc_layers) - 1):
                 concat = torch.relu(self.fc_layers[i](concat))
             return self.fc_layers[-1](concat)
-        
-        adjacent_user_embeds = self.item_interaction_matrix[:,items].T @ self.user_embed.weight
-        adjacent_item_embeds = self.user_interaction_matrix[users,:] @ self.item_embed.weight
+ 
+        item_interaction_matrix = self.item_interaction_matrix[:,items]
+        item_interaction_matrix[users, torch.arange(len(items))] = 0.
+        user_interaction_matrix = self.user_interaction_matrix[users,:]
+        user_interaction_matrix[torch.arange(len(users)), items] = 0.
+        adjacent_user_embeds = item_interaction_matrix.T @ self.user_embed.weight
+        adjacent_item_embeds = user_interaction_matrix @ self.item_embed.weight
 
         concat = torch.cat((user_embeds, item_embeds, adjacent_user_embeds, adjacent_item_embeds), dim=1)
         for i in range(len(self.fc_layers) - 1):
@@ -89,17 +99,38 @@ class MLP(nn.Module):
 
 
 class NeuMF(nn.Module):
-    def __init__(self, num_users, num_items, gmf_embed_dim, mlp_embed_dim, mlp_hidden_dims: list[int], include_adjacent=False, user_interaction_matrix=None, item_interaction_matrix=None):
+    def __init__(self, num_users, num_items, gmf_embed_dim, mlp_embed_dim, mlp_hidden_dims: list[int], include_adjacent=False, user_interaction_matrix=None, item_interaction_matrix=None, type="both"):
         super(NeuMF, self).__init__()
-        self.gmf = GMF(num_users, num_items, gmf_embed_dim, include_adjacent, user_interaction_matrix, item_interaction_matrix)
-        self.mlp = MLP(num_users, num_items, mlp_embed_dim, mlp_hidden_dims, include_adjacent, user_interaction_matrix, item_interaction_matrix)
-        self.out = nn.Linear(self.gmf.out_dim + self.mlp.out_dim, 1, bias=False)
+        self.typ = type
+        if type != "mlp":
+            self.gmf = GMF(num_users, num_items, gmf_embed_dim, include_adjacent, user_interaction_matrix, item_interaction_matrix)
+        if type != "gmf":
+            self.mlp = MLP(num_users, num_items, mlp_embed_dim, mlp_hidden_dims, include_adjacent, user_interaction_matrix, item_interaction_matrix)
+
+        if type == "gmf":
+            self.gmf_head = nn.Linear(self.gmf.out_dim, 1, bias=False)
+        elif type == "mlp":
+            self.mlp_head = nn.Linear(self.mlp.out_dim, 1, bias=False)
+        elif type == "both":
+            self.both_head = nn.Linear(self.gmf.out_dim + self.mlp.out_dim, 1, bias=False)
+        else:
+            raise ValueError("Invalid type")
 
     def forward(self, users, items):
-        gmf_out = self.gmf(users, items)
-        mlp_out = self.mlp(users, items)
-        concat = torch.cat((gmf_out, mlp_out), dim=1)
-        return self.out(concat).squeeze()
+        if self.typ == "gmf":
+            gmf_out = self.gmf(users, items)
+            return self.gmf_head(gmf_out).squeeze()
+        elif self.typ == "mlp":
+            mlp_out = self.mlp(users, items)
+            return self.mlp_head(mlp_out).squeeze()
+        elif self.typ == "both":
+            gmf_out = self.gmf(users, items)
+            mlp_out = self.mlp(users, items)
+            concat = torch.cat((gmf_out, mlp_out), dim=1)
+            out = self.both_head(concat)
+            return out.squeeze()
+        else:
+            raise ValueError("Invalid type")
 
 def nanstd(o, dim, keepdim=False):
     # Compute the mean along the specified dimension, ignoring NaNs
@@ -113,28 +144,33 @@ def nanstd(o, dim, keepdim=False):
     
     # Take the square root to get the standard deviation
     std_dev = torch.sqrt(variance)
-    
+
+    mask = std_dev == 0.
+    std_dev[mask] = 1.0
+
     return std_dev
 
 class ItemNormalizer():
-    def __init__(self, num_users, num_items):
+    def __init__(self, num_users, num_items, divide_by_std=False):
         self.num_users = num_users
         self.num_items = num_items
 
     def fit(self, users, items, ratings):
         data = torch.full((self.num_users, self.num_items), torch.nan, device=DEVICE)
         data[users, items] = ratings.float()
-        mean = torch.nanmean(data, dim=0)
-        std = nanstd(data, dim=0)
-        self.mean = mean
-        self.std = std
+        self.mean = torch.nanmean(data, dim=0)
+        self.std = nanstd(data, dim=0)
 
     def transform(self, users, items, ratings):
-        ratings_normalized = (ratings - self.mean[items]) / self.std[items]
+        ratings_normalized = ratings - self.mean[items]
+        if self.divide_by_std:
+            ratings_normalized = ratings_normalized / self.std[items]
         return ratings_normalized
 
     def inverse_transform(self, users, items, ratings):
-        ratings_denormalized = ratings * self.std[items] + self.mean[items]
+        if self.divide_by_std:
+            ratings = ratings * self.std[items]
+        ratings_denormalized = ratings + self.mean[items]
         return torch.clamp(ratings_denormalized, 1, 5)
 
     def save(self, file_path):
@@ -149,24 +185,27 @@ class ItemNormalizer():
         self.std = state_dict["std"]
 
 class UserNormalizer():
-    def __init__(self, num_users, num_items):
+    def __init__(self, num_users, num_items, divide_by_std=False):
         self.num_users = num_users
         self.num_items = num_items
+        self.divide_by_std = divide_by_std
 
     def fit(self, users, items, ratings):
         data = torch.full((self.num_users, self.num_items), torch.nan, device=DEVICE)
         data[users, items] = ratings.float()
-        mean = torch.nanmean(data, dim=1)
-        std = nanstd(data, dim=1)
-        self.mean = mean
-        self.std = std
+        self.mean = torch.nanmean(data, dim=1)
+        self.std = nanstd(data, dim=1)
 
     def transform(self, users, items, ratings):
-        ratings_normalized = (ratings - self.mean[users]) / self.std[users]
+        ratings_normalized = ratings - self.mean[users]
+        if self.divide_by_std:
+            ratings_normalized = ratings_normalized / self.std[users]
         return ratings_normalized
 
     def inverse_transform(self, users, items, ratings):
-        ratings_denormalized = ratings * self.std[users] + self.mean[users]
+        if self.divide_by_std:
+            ratings = ratings * self.std[users]
+        ratings_denormalized = ratings + self.mean[users]
         return torch.clamp(ratings_denormalized, 1, 5)
     
     def save(self, file_path):
@@ -181,33 +220,32 @@ class UserNormalizer():
         self.std = state_dict["std"]
 
 class BothNormalizer():
-    def __init__(self, num_users, num_items):
+    def __init__(self, num_users, num_items, divide_by_std=False):
         self.num_users = num_users
         self.num_items = num_items
+        self.divide_by_std = divide_by_std
 
     def fit(self, users, items, ratings):
         data = torch.full((self.num_users, self.num_items), torch.nan, device=DEVICE)
         data[users, items] = ratings.float()
-        total_mean = torch.nanmean(data)
-        data = data - total_mean
-        user_mean = torch.nanmean(data, dim=1)
-        item_mean = torch.nanmean(data, dim=0)
+        self.total_mean = torch.nanmean(data)
+        data = data - self.total_mean
+        self.user_mean = torch.nanmean(data, dim=1)
+        self.item_mean = torch.nanmean(data, dim=0)
 
-        user_std = nanstd(data, dim=1)
-        item_std = nanstd(data, dim=0)
-
-        self.total_mean = total_mean
-        self.user_mean = user_mean
-        self.item_mean = item_mean
-        self.user_std = user_std
-        self.item_std = item_std
+        self.user_std = nanstd(data, dim=1)
+        self.item_std = nanstd(data, dim=0)
 
     def transform(self, users, items, ratings):
-        ratings_normalized = (ratings - self.total_mean - self.user_mean[users] - self.item_mean[items]) / (self.user_std[users] * self.item_std[items])
+        ratings_normalized = ratings - self.total_mean - self.user_mean[users] - self.item_mean[items]
+        if self.divide_by_std:
+            ratings_normalized = ratings_normalized / (self.user_std[users] * self.item_std[items])
         return ratings_normalized
 
     def inverse_transform(self, users, items, ratings):
-        ratings_denormalized = ratings * (self.user_std[users] * self.item_std[items]) + self.total_mean + self.user_mean[users] + self.item_mean[items]
+        if self.divide_by_std:
+            ratings = ratings * (self.user_std[users] * self.item_std[items])
+        ratings_denormalized = ratings + self.total_mean + self.user_mean[users] + self.item_mean[items]
         return torch.clamp(ratings_denormalized, 1, 5)
 
     def save(self, file_path):
@@ -237,6 +275,7 @@ class NFC():
         self.grads = None
         self.criterion = nn.MSELoss()
         self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode="min", factor=0.5, patience=2)
 
         # create checkpoint dir
         if not os.path.exists(self.checkpoint_dir):
@@ -244,6 +283,7 @@ class NFC():
 
     def init_config(self, config):
         self.model_id = config.get("model_id", "NCF")
+        self.type = config.get("type", "both")
         self.checkpoint_dir = os.path.join("checkpoints", self.model_id)
         self.gmf_embed_dim = config.get("gmf_embed_dim", 4)
         self.mlp_embed_dim = config.get("mlp_embed_dim", 4)
@@ -253,22 +293,23 @@ class NFC():
         self.batch_size = config.get("batch_size", 256)
         self.learning_rate = config.get("learning_rate", 0.001)
         self.normalizer = config.get("normalizer", "item")
+        self.normalizer_divide_by_std = config.get("normalizer_divide_by_std", False)
         self.include_adjacent = config.get("include_adjacent", False)
         self.use_grokfast = config.get("use_grokfast", False)
         self.weight_decay = config.get("weight_decay", 0.01)
 
     def create_normalizer(self):
         if self.normalizer == "item":
-            return ItemNormalizer(self.num_users, self.num_items)
+            return ItemNormalizer(self.num_users, self.num_items, self.normalizer_divide_by_std)
         elif self.normalizer == "user":
-            return UserNormalizer(self.num_users, self.num_items)
+            return UserNormalizer(self.num_users, self.num_items, self.normalizer_divide_by_std)
         elif self.normalizer == "both":
-            return BothNormalizer(self.num_users, self.num_items)
+            return BothNormalizer(self.num_users, self.num_items, self.normalizer_divide_by_std)
         else:
             raise ValueError("Invalid normalizer")
     
     def create_model(self):
-        model = NeuMF(self.num_users, self.num_items, self.gmf_embed_dim, self.mlp_embed_dim, self.mlp_hidden_dims, self.include_adjacent, self.create_user_interaction_matrix(), self.create_item_interaction_matrix()).to(DEVICE)
+        model = NeuMF(self.num_users, self.num_items, self.gmf_embed_dim, self.mlp_embed_dim, self.mlp_hidden_dims, self.include_adjacent, self.create_user_interaction_matrix(), self.create_item_interaction_matrix(), self.type).to(DEVICE)
         num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
         print("Number of parameters:", num_params)
         return model
@@ -279,6 +320,7 @@ class NFC():
         self.normalizer.load(os.path.join(self.checkpoint_dir, "normalizer.pth"))
         optimizer_path = os.path.join(self.checkpoint_dir, f"{file_name}_optimizer.pth")
         self.optimizer.load_state_dict(torch.load(optimizer_path))
+        print("Model loaded")
 
     def save_model(self, file_name):
         model_path = os.path.join(self.checkpoint_dir, f"{file_name}.pth")
@@ -320,8 +362,8 @@ class NFC():
         users, items, ratings = self.load_data("data/data_train.csv")
 
         interaction_matrix = torch.zeros((self.num_users, self.num_items), device=DEVICE)
-        interaction_matrix[users, items] = 1.0
-        return interaction_matrix / interaction_matrix.sum(dim=1, keepdim=True).sqrt()
+        interaction_matrix[users, items] = ratings.float()
+        return interaction_matrix / torch.clip(interaction_matrix.sum(dim=1, keepdim=True), 1, np.inf).sqrt()
 
     def create_item_interaction_matrix(self):
         if not self.include_adjacent:
@@ -329,8 +371,8 @@ class NFC():
         users, items, ratings = self.load_data("data/data_train.csv")
 
         interaction_matrix = torch.zeros((self.num_users, self.num_items), device=DEVICE)
-        interaction_matrix[users, items] = 1.0
-        return interaction_matrix / interaction_matrix.sum(dim=0, keepdim=True).sqrt()
+        interaction_matrix[users, items] = ratings.float()
+        return interaction_matrix / torch.clip(interaction_matrix.sum(dim=0, keepdim=True), 1, np.inf).sqrt()
 
     def create_train_test_split(self, users, items, ratings):
         assert len(users) == len(items) == len(ratings)
@@ -367,11 +409,15 @@ class NFC():
         users, items, ratings = self.load_data("data/data_train.csv")
         train_loader, test_loader = self.create_loaders(users, items, ratings)
         best_rmse = self.evaluate(test_loader)
+        if np.isnan(best_rmse):
+            raise ValueError("NaN RMSE")
         self.save_model("best_model")
         for epoch in range(self.n_epochs):
             print(f"\nEpoch {epoch + 1}/{self.n_epochs}")
+            print(f"Learning rate: {self.optimizer.param_groups[0]['lr']}")
             self.train_epoch(train_loader)
             rmse = self.evaluate(test_loader)
+            self.scheduler.step(rmse)
             if rmse < best_rmse:
                 best_rmse = rmse
                 self.save_model("best_model")
@@ -385,10 +431,9 @@ class NFC():
         with torch.no_grad():
             for users, items, ratings in tqdm.tqdm(dataloader):
                 pred = self.model(users, items)
-                pred = self.normalizer.inverse_transform(users, items, pred)
-                ratings = self.normalizer.inverse_transform(users, items, ratings)
-                rmse += (pred - ratings).pow(2).sum().item()
-        rmse /= len(dataloader.dataset)
+                pred_normalized = self.normalizer.inverse_transform(users, items, pred)
+                ratings_normalized = self.normalizer.inverse_transform(users, items, ratings)
+                rmse += (pred_normalized - ratings_normalized).pow(2).sum().item() / len(dataloader.dataset)
         rmse = np.sqrt(rmse)
         print("Eval RMSE:", rmse)
         return rmse
@@ -403,11 +448,11 @@ class NFC():
                 preds.append(pred)
         return torch.cat(preds).cpu().numpy()
 
-    def create_submission(self):
+    def create_submission(self, file_suffix=""):
         if not os.path.exists("submissions"):
             os.makedirs("submissions")
 
-        submission_path = os.path.join("submissions", f"{self.model_id}.csv")
+        submission_path = os.path.join("submissions", f"{self.model_id}{file_suffix}.csv")
         users, items, _ = self.load_data("data/sampleSubmission.csv")
         submission_dataset = MovieDataset(users, items, torch.zeros_like(users, dtype=torch.float32, device=DEVICE))
         submission_loader = torch.utils.data.DataLoader(submission_dataset, batch_size=256, shuffle=False)
@@ -417,26 +462,29 @@ class NFC():
         df.to_csv(submission_path, index=False)
 
 if __name__ == "__main__":
-    # set seeds
-    torch.manual_seed(1)
-    np.random.seed(1)
+    for i in range(10):
+        print(f"Seed: {i}")
+        torch.manual_seed(i)
+        np.random.seed(i)
 
-    config = {
-        "model_id": "NCF_adj_16",
-        "gmf_embed_dim": 16,
-        "mlp_embed_dim": 16,
-        "mlp_hidden_dims": [64, 16, 4],
-        "test_split": 0.1,
-        "n_epochs": 50,
-        "batch_size": 256,
-        "learning_rate": 0.001,
-        "normalizer": "both",
-        "include_adjacent": True,
-        "use_grokfast": False,
-        "weight_decay": 0.5
-    }
+        config = {
+            "model_id": f"NCF_ensemble_{i}",
+            "type": "both", # gmf, mlp, both
+            "gmf_embed_dim": 16,
+            "mlp_embed_dim": 16,
+            "mlp_hidden_dims": [64, 16, 4],
+            "test_split": 0.1,
+            "n_epochs": 30,
+            "batch_size": 256,
+            "learning_rate": 0.001,
+            "normalizer": "both", # item, user, both
+            "normalizer_divide_by_std": False,
+            "include_adjacent": True,
+            "use_grokfast": False,
+            "weight_decay": 0.5
+        }
 
-    ncf = NFC(10000, 1000, config)
-    #ncf.load_model("last_model")
-    ncf.train()
-    ncf.create_submission()
+        ncf = NFC(10000, 1000, config)
+        ncf.train()
+        ncf.load_model("best_model")
+        ncf.create_submission("_best")
