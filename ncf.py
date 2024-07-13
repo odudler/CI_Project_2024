@@ -154,6 +154,7 @@ class ItemNormalizer():
     def __init__(self, num_users, num_items, divide_by_std=False):
         self.num_users = num_users
         self.num_items = num_items
+        self.divide_by_std = divide_by_std
 
     def fit(self, users, items, ratings):
         data = torch.full((self.num_users, self.num_items), torch.nan, device=DEVICE)
