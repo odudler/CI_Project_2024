@@ -23,7 +23,7 @@ args:
   SVDplusplus: #Achieves about 1.15 score
     n_factors: 5
     lr_all: 0.002
-    n_epochs: 300
+    n_epochs: 100
     reg_all: 0.04
 
   SVDsimple: #Achieves about 1.14 score

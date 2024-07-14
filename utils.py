@@ -26,8 +26,8 @@ def extract_users_items_predictions(df):
     return users, movies, predictions
     
 
-def normalize_columns(data, n_users, n_movies):
-    mask = np.ma.masked_equal(data, 0)
+def normalize_columns(data, n_users, n_movies, mask_value=0):
+    mask = np.ma.masked_equal(data, mask_value)
     # to check: mean along row / col have effects on results?
     mean = np.tile(np.ma.mean(mask, axis=0).data, (n_users, 1))
     std = np.tile(np.ma.std(mask, axis=0).data, (n_users, 1))
@@ -50,6 +50,18 @@ def prepare_data_for_surprise(df):
         {"itemID": movies, "userID": users, "rating": predictions}
     )
     return Dataset.load_from_df(df_surprise, reader=Reader(rating_scale=(1, 5)))
+
+def prepare_data_for_surprise_nondf(users, movies, predictions):
+    """
+    Parameters:
+        users, movies, predictions (np.array): Array of user and movie ids and the corresponding predictions.
+    Returns:
+        dataset (surprise.Dataset): Dataset containing the training data
+    """
+    df_surprise = pd.DataFrame(
+        {"itemID": movies, "userID": users, "rating": predictions}
+    )
+    return Dataset.load_from_df(df_surprise, reader=Reader(rating_scale=(-3, 3)))
 
 def prepare_data_for_recommender(df, n_users, n_movies, file_path):
     users, movies, predictions = extract_users_items_predictions(df)
@@ -88,6 +100,21 @@ def create_data_matrix(users, movies, predictions, num_users=10000, num_movies=1
     matrix = np.zeros((num_users, num_movies), dtype=np.float16)
     matrix[users, movies] = predictions.astype(np.float16)
     return matrix
+
+def convert_matrix_to_data(data_matrix, masked_value):
+#      Find indices where the value is not -10
+    users, movies = np.where(data_matrix != masked_value)
+    
+    # Get the corresponding ratings
+    predictions = data_matrix[users, movies]
+    
+    return users, movies, predictions
+
+def convert_matrix_to_data_given_data(data_matrix, users, movies):
+    predictions = data_matrix[users, movies]
+
+    return users, movies, predictions
+
 
 
 def create_submission_from_matrix(
