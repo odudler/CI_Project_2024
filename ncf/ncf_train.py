@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import argparse
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -13,6 +14,7 @@ from grokfast import gradfilter_ema
 from normalizer import ItemNormalizer, UserNormalizer, BothNormalizer
 from ncf_models import NeuMF
 from ncf_utils import load_data, create_train_eval_split, DEVICE
+from ncf_configs import ncf_config, ncf_extended_config, ncf_extended_attention_config
 
 
 class NCFTrain():
@@ -172,57 +174,30 @@ class NCFTrain():
         df.to_csv(submission_path, index=False)
 
 if __name__ == "__main__":
-    torch.manual_seed(0)
-    np.random.seed(0)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", type=str, default="ncf") # ncf, ncf_extended, ncf_extended_attention
+    args = parser.parse_args()
 
     config = {
-        "model_id": "NCF_attention",
-        "save_model": True,
-        "verbose": True,
-        "model_config": {
-            "type": "both", # gmf, mlp, both
-            "gmf": {
-                "embed_dim": 32,
-                "dropout": 0.3,
-                "use_interactions": True,
-                "interaction_type": "split_by_rating",
-                "separate_embeddings": False,
-                "include_same_hadamards": False,
-                "include_cross_hadamards": False,
-                "include_attention_layer": True,
-                "n_attention_layers": 2,
-                "n_heads": 2,
-                "include_ffn": True,
-                "ff_hidden_dim": 64,
-            },
-            "mlp": {
-                "embed_dim": 16,
-                "dropout": 0.1,
-                "hidden_dims": [16, 4],
-                "use_interactions": True,
-                "interaction_type": "default",
-                "separate_embeddings": True,
-                "include_attention_layer": False,
-                "n_attention_layers": 1,
-                "n_heads": 1,
-                "include_ffn": True,
-                "ff_hidden_dim": 16,
-            },
-        },
-        "n_epochs": 100,
-        "batch_size": 128,
-        "learning_rate": 0.00003,
-        "use_lr_scheduler": False,
-        "use_grokfast": False,
-        "weight_decay": 0.25,
-        "normalizer": "both", # item, user, both
-        "normalizer_divide_by_std": True,
-    }
+        "ncf": ncf_config,
+        "ncf_extended": ncf_extended_config,
+        "ncf_extended_attention": ncf_extended_attention_config
+    }[args.model]
 
-    dataset = load_data("data/data_train.csv")
-    train_dataset, eval_dataset = create_train_eval_split(dataset, train_split=0.9, seed=0)
+    rmses = []
+    for i in range(10):
+        torch.manual_seed(i)
+        np.random.seed(i)
 
-    ncf = NCFTrain(10000, 1000, config)
-    ncf.train(train_dataset=train_dataset, eval_dataset=eval_dataset)
-    ncf.load("best_model")
-    ncf.create_submission()
+        dataset = load_data("data/data_train.csv")
+        train_dataset, eval_dataset = create_train_eval_split(dataset, train_split=0.9, seed=i)
+
+        ncf = NCFTrain(10000, 1000, config=config)
+        ncf.train(train_dataset=train_dataset, eval_dataset=eval_dataset)
+        ncf.load("best_model")
+        rmse = ncf.evaluate(eval_dataset)
+        rmses.append(rmse)
+        ncf.create_submission(f"_{i}")
+
+    print("Mean RMSE:", np.mean(rmses), np.std(rmses))
+    print("RMSEs:", rmses)

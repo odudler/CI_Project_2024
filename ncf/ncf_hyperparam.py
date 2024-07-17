@@ -81,7 +81,6 @@ ncf_extended_search_space = {
 }
 
 if __name__ == "__main__":
-    # argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--search_space", type=str, default="ncf") # ncf, ncf_extended
     args = parser.parse_args()
