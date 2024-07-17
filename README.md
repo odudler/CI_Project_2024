@@ -27,7 +27,7 @@ Import scikit-surprise via conda, as installing via pip leads to issues:
 - `conda install scikit-surprise`
 Import relevant dependencies using the requirements.txt file:
 - `pip install -r requirements.txt`
-Run the cells in main.ipynb and change the selected model in the second cell to train any implemented model
+Run the cells in main.ipynb and change the selected model in the third cell to train any implemented model
 
 
 
