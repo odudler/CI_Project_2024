@@ -208,7 +208,6 @@ def read_config(config_path):
         svdpp=argparse.Namespace(**(config["args"]["SVDplusplus"] or {})),
         svd=argparse.Namespace(**(config["args"]["SVDsimple"] or {})),
         knn=argparse.Namespace(**(config["args"]["KNN"] or {})),
-        ncf=argparse.Namespace(**(config["args"]["NeuralCF"] or {})),
         bfm=argparse.Namespace(**(config["args"]["BFM"] or {})),
         **(config["args"]["training"] or {}),
     )
@@ -257,15 +256,6 @@ def set_args(params, model_name, config_path="config_models.yaml"):
         args.knn.k = params["k"]
         args.knn.min_k = params["min_k"]
         args.knn.sim_options = params["sim_options"]
-
-    if model_name == "NeuralCF":
-        args.ncf = argparse.Namespace()
-        args.ncf.model_type = params['model_type']
-        args.ncf.n_factors = params["n_factors"]
-        args.ncf.layer_sizes = params['layer_sizes']
-        args.ncf.n_epochs = params["n_epochs"]
-        args.ncf.batch_size = params["batch_size"]
-        args.ncf.learning_rate = params["learning_rate"]
 
     if model_name == "BFM":
         args.bfm = argparse.Namespace()

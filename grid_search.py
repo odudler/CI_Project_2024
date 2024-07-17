@@ -47,8 +47,6 @@ def get_model(model_name, args):
         return SVDsimple(args)
     elif model_name == "KNN":
         return KNN(args)
-    elif model_name == "NeuralCF":
-        return NeuralCF(args)
     elif model_name == "BFM":
         return BFM(args)
     else:
