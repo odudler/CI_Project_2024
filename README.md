@@ -17,7 +17,8 @@
 - "outputs" contains submission csv files containing the predicted ratings
 - "main.ipynb" is a notebook for running gridsearch and creating submissions
 - "models.py" contains implementations of kNN, SVD, SVD++ and BFM algorithms
-- "grid_search.py" and "grokfast.py" contain code for performing hyperparameter tuning
+- "grid_search.py" contain code for performing hyperparameter tuning
+- "grokfast.py" contains code copied from the Grokfast repo which implements the Grokfast algorithm
 
 ### How to replicate our results:
 

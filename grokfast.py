@@ -1,3 +1,6 @@
+# Taken from https://github.com/ironjr/grokfast
+# Implements the Grokfast algorithm from the Grokfast paper: https://arxiv.org/pdf/2405.20233
+
 ### Imports
 from collections import deque
 from typing import Dict, Optional, Literal
