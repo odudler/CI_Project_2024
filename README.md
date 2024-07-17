@@ -21,13 +21,13 @@
 
 ### How to replicate our results:
 
-Create a conda python environment using python version 3.9:
-- `conda create --name env_name python=3.9`
-Import scikit-surprise via conda, as installing via pip leads to issues:
-- `conda install scikit-surprise`
-Import relevant dependencies using the requirements.txt file:
-- `pip install -r requirements.txt`
-Run the cells in main.ipynb and change the selected model in the third cell to train any implemented model
+- Create a conda python environment using python version 3.9:
+  - `conda create --name env_name python=3.9`
+- Import scikit-surprise via conda, as installing via pip leads to issues:
+  - `conda install scikit-surprise`
+- Import relevant dependencies using the requirements.txt file:
+  - `pip install -r requirements.txt`
+- Run the cells in main.ipynb and change the selected model in the third cell to train any implemented model
 
 
 
