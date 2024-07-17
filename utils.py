@@ -27,6 +27,17 @@ def extract_users_items_predictions(df):
     
 
 def normalize_columns(data, n_users, n_movies, mask_value=0):
+    """
+    Parameters:
+        data (np.ndarray): two-dimensional data matrix containing ratings
+        n_users (int): numner of users/rows in data matrix
+        n_movies (int): number of movies/columns in data matrix
+        mask_value (int): value to mask in data matrix
+    Returns:
+        data_normalized (np.ndarray): two-dimensional data matrix containing normalized ratings
+        mean (np.ndarray): two-dimensional data matrix containing data mean
+        std: data standard deviation
+    """
     mask = np.ma.masked_equal(data, mask_value)
     # to check: mean along row / col have effects on results?
     mean = np.tile(np.ma.mean(mask, axis=0).data, (n_users, 1))
@@ -35,6 +46,9 @@ def normalize_columns(data, n_users, n_movies, mask_value=0):
     return data_normalized, mean, std
 
 def denormalize_columns(data, mean, std):
+    """
+    given the data mean and std, undoes data normalization
+    """
     return np.clip(data * std + mean, 1, 5)
     
 
@@ -96,13 +110,12 @@ def create_data_matrix(users, movies, predictions, num_users=10000, num_movies=1
     Returns:
         matrix (np.ndarray): Data Matrix containing predictions
     """
-    # TODO: is float16 enough?
     matrix = np.zeros((num_users, num_movies), dtype=np.float16)
     matrix[users, movies] = predictions.astype(np.float16)
     return matrix
 
 def convert_matrix_to_data(data_matrix, masked_value):
-#      Find indices where the value is not -10
+#      Find indices where the value is not "masked_value"
     users, movies = np.where(data_matrix != masked_value)
     
     # Get the corresponding ratings
@@ -111,6 +124,9 @@ def convert_matrix_to_data(data_matrix, masked_value):
     return users, movies, predictions
 
 def convert_matrix_to_data_given_data(data_matrix, users, movies):
+    """
+    extracts data from data matrix to give sparse arrays
+    """
     predictions = data_matrix[users, movies]
 
     return users, movies, predictions
@@ -179,7 +195,6 @@ def calculate_rmse(preds, labels):
 
 def read_config(config_path):
     """
-    TODO: Extend this function for every added model!
     Parameters:
         config_path (String): path to the config to load
 

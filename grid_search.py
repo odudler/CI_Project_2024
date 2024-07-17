@@ -6,6 +6,8 @@ from sklearn.model_selection import KFold
 from models import *
 from utils import *
 
+#File for running gridsearch / hyperparameter tuning
+
 def load_yaml_parameters(filepath):
     '''
     Parameters:

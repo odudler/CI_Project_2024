@@ -5,10 +5,6 @@
 # "model_name:" arguments for initializing specific model
 #
 
-#TODO: Currently parameters are default values
-#   We should use existing values from prior students and perform gridsearch with similar working 
-#   values to confirm their values or find even better ones.
-
 args:
   training:
     random_state: 1337
@@ -48,7 +44,7 @@ args:
   BFM: #Achieves about 0.96 score
     algorithm: "oprobit"  
     variational: False    
-    iteration: 2500    
+    iteration: 3500
     dimension: 24       
     use_iu: True          
     use_ii: True 

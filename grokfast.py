@@ -4,7 +4,6 @@ from typing import Dict, Optional, Literal
 import torch
 import torch.nn as nn
 
-
 ### Grokfast
 def gradfilter_ema(
     m: nn.Module,

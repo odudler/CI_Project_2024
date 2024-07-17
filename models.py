@@ -49,24 +49,6 @@ class SVDplusplus:
         svdpp.fit(trainset)
         self.model = svdpp
 
-    # def train(self, df):
-    #     users, movies, predictions = extract_users_items_predictions(df)
-    #     data_matrix = create_data_matrix(users, movies, predictions)
-    #     data_matrix[data_matrix == 0] = -10
-    #     data_norm, self.mean, self.std = normalize_columns(data_matrix, 10000, 1000, mask_value=-10)
-    #     users, movies, predictions = convert_matrix_to_data(data_norm, -10)
-
-    #     dataset = prepare_data_for_surprise_nondf(users, movies, predictions)
-    #     trainset = dataset.build_full_trainset()
-    #     svdpp = SVDpp(
-    #         **self.svdpp_args.__dict__,
-    #         verbose=self.verbose,
-    #         random_state=self.random_state,
-    #         cache_ratings=True,
-    #     )
-    #     svdpp.fit(trainset)
-    #     self.model = svdpp
-
     def predict(self, df, output_file=None, return_loss=False):
         users, movies, labels = extract_users_items_predictions(df)
         predictions = np.empty(len(labels))
@@ -85,31 +67,6 @@ class SVDplusplus:
         else:
             print(f"RMSE for {self.__class__.__name__}: {loss}")
             return None
-
-    # def predict(self, df, output_file=None, return_loss=False):
-    #     users, movies, labels = extract_users_items_predictions(df)
-    #     predictions = np.empty(len(labels))
-
-    #     for i in tqdm(range(len(users)), desc="Prediction Loop"):
-    #         predictions[i] = self.model.predict(
-    #             users[i], movies[i], verbose=self.verbose
-    #         ).est
-
-    #     if output_file is not None:
-    #         data_matrix = create_data_matrix(users, movies, predictions)
-    #         data_denorm = denormalize_columns(data_matrix, self.mean, self.std)
-    #         users, movies, predictions = convert_matrix_to_data_given_data(data_denorm, users, movies)
-
-
-    #         create_submission_from_array(predictions, users, movies, output_file)
-
-    #     loss = calculate_rmse(predictions, labels)
-    #     if return_loss:
-    #         return loss
-    #     else:
-    #         print(f"RMSE for {self.__class__.__name__}: {loss}")
-    #         return None
-
 
 class SVDsimple:
     def __init__(self, args):
@@ -147,7 +104,6 @@ class SVDsimple:
             print(f"RMSE for {self.__class__.__name__}: {loss}")
             return None
 
-
 class KNN:
     def __init__(self, args):
         self.knn_args = args.knn
@@ -178,8 +134,6 @@ class KNN:
         else:
             print(f"RMSE for {self.__class__.__name__}: {loss}")
             return None
-
-
 
 class NeuralCF:
     #Code inspired by: https://github.com/recommenders-team/recommenders/blob/main/examples/02_model_collaborative_filtering/ncf_deep_dive.ipynb
@@ -402,4 +356,3 @@ class BFM:
         else:
             print(f"RMSE for {self.__class__.__name__}: {loss}")
             return None
-        
