@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import math
-import os
 from sklearn.metrics import mean_squared_error
 from surprise import Reader, Dataset
 import argparse
@@ -76,21 +75,6 @@ def prepare_data_for_surprise_nondf(users, movies, predictions):
         {"itemID": movies, "userID": users, "rating": predictions}
     )
     return Dataset.load_from_df(df_surprise, reader=Reader(rating_scale=(-3, 3)))
-
-def prepare_data_for_recommender(df, n_users, n_movies, file_path):
-    users, movies, predictions = extract_users_items_predictions(df)
-    data_matrix = create_data_matrix(users, movies, predictions)
-    data_normalized, mean, std = normalize_columns(data_matrix, n_users, n_movies)
-    predictions_normalized = data_normalized[users, movies]
-    df_new = pd.DataFrame({
-        'itemID': movies,
-        'userID': users,
-        'rating': predictions_normalized
-    })
-    df_new.sort_values(by=['userID'], inplace=True)
-    df_new.to_csv(file_path)
-
-    return mean, std
 
 def prepare_data_for_BFM(df):
     users, movies, predictions = extract_users_items_predictions(df)

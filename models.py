@@ -1,35 +1,21 @@
 import numpy as np
-import os
 from tqdm import tqdm
-from typing import Dict, List, Union
+from typing import Dict, List
 from scipy import sparse as sps
 
 from utils import (
     prepare_data_for_surprise,
-    prepare_data_for_recommender,
     prepare_data_for_BFM,
     extract_users_items_predictions,
     create_submission_from_array,
-    create_submission_from_matrix,
     calculate_rmse,
-    denormalize_columns,
-    prepare_data_for_surprise_nondf,
-    create_data_matrix,
-    normalize_columns,
-    convert_matrix_to_data,
-    convert_matrix_to_data_given_data
 )
 #SVD + KNN imports
 from surprise import SVDpp, SVD, KNNWithZScore
-#NCF imports
-from recommenders.models.ncf.ncf_singlenode import NCF
-from recommenders.models.ncf.dataset import Dataset as NCFDataset
 #BMF imports
 import myfm
-from myfm import RelationBlock, MyFMOrderedProbit, MyFMRegressor
+from myfm import RelationBlock
 from myfm.utils.encoders import CategoryValueToSparseEncoder
-from myfm.gibbs import MyFMOrderedProbit
-from myfm.utils.callbacks.libfm import LibFMLikeCallbackBase
 
 class SVDplusplus:
     def __init__(self, args):
