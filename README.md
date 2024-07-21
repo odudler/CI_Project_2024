@@ -39,7 +39,7 @@ Changing the first string parameter to any of ['SVDplusplus', 'SVDsimple', 'BFM'
 
 #### Replicate Submission Files for NCF algorithm + extended version
 
-TODO
+Run `python ncf/ncf_train --model {model}`, where `{model}` is either ncf, ncf_extended or ncf_extended_attention to run training for these three models. Each model will be trained five times on five different train-validation splits with 80% training data. The script will print the mean RMSE and the standard deviation of the RMSE over these five runs. We take the model that achieved the lowest validation RMSE during training for each of the five runs as the final model of that run. The code will also generate submission files for the best model each run.
 
 #### Replicate hyperparameter tuning results for baseline algorithms except NCF
 
@@ -47,7 +47,7 @@ TODO
 
 #### Replicate hyperparameter tuning results for NCF algorithm + extended version
 
-TODO
+Run `python ncf/ncf_hyperparam --search_space {model}`, where `{model}` is either 'ncf' or 'ncf_extended'. The script will perform the hyperparameter search that we performed to find the best hyperparameters for the NCF and Extended NCF models.
 
 
 
