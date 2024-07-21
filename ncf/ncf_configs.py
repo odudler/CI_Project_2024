@@ -1,47 +1,5 @@
-# Full config for showing which hyperparameters the model has
-full_config = {
-    "model_id": "includes_all_hyperparameters",
-    "save_model": True,
-    "verbose": True,
-    "model_config": {
-        "type": "both", # gmf, mlp, both
-        "gmf": {
-            "embed_dim": 32,
-            "dropout": 0.3,
-            "use_interactions": True,
-            "interaction_type": "split_by_rating",
-            "separate_embeddings": False,
-            "include_same_hadamards": False,
-            "include_cross_hadamards": False,
-            "include_attention_layer": True,
-            "n_attention_layers": 2,
-            "n_heads": 2,
-            "include_ffn": True,
-            "ff_hidden_dim": 64,
-        },
-        "mlp": {
-            "embed_dim": 16,
-            "dropout": 0.1,
-            "hidden_dims": [16, 4],
-            "use_interactions": True,
-            "interaction_type": "default",
-            "separate_embeddings": True,
-            "include_attention_layer": False,
-            "n_attention_layers": 1,
-            "n_heads": 1,
-            "include_ffn": True,
-            "ff_hidden_dim": 16,
-        },
-    },
-    "n_epochs": 100,
-    "batch_size": 128,
-    "learning_rate": 0.00003,
-    "use_lr_scheduler": False,
-    "use_grokfast": False,
-    "weight_decay": 0.25,
-    "normalizer": "both", # item, user, both
-    "normalizer_divide_by_std": True,
-}
+"""Configuration files for all our experiments with NCF models. Hyperparameters were found using ncf_hyperparam.py.
+"""
 
 ncf_config = {
     "model_id": "ncf",

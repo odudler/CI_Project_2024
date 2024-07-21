@@ -19,6 +19,54 @@ from ncf_configs import ncf_config, ncf_extended_config, ncf_extended_attention_
 
 class NCFTrain():
     def __init__(self, num_users, num_items, config):
+        '''
+        Parameters:
+            num_users (int): Number of users
+            num_items (int): Number of items
+            config (dict): Configuration dictionary
+            config["model_id"] (str): Model ID, checkpoints will be saved in "checkpoints/{model_id}"
+            config["save_model"] (bool): Whether to save the best and last model each epoch
+            config["verbose"] (bool): Whether to print tqdm progress bars
+            config["n_epochs"] (int): Number of epochs
+            config["batch_size"] (int): Batch size
+            config["learning_rate"] (float): Learning rate
+            config["use_lr_scheduler"] (bool): Whether to use an adaptive learning rate scheduler that halves the learning rate when the validation RMSE does not improve for 2 epochs
+            config["use_grokfast"] (bool): Whether to use Grokfast to amplify low-frequency gradients
+            config["weight_decay"] (float): Weight decay for AdamW optimizer
+            config["normalizer"] (str): Normalizer type, "item", "user" or "both", see section 2.B.3 of our report
+            config["divide_by_std"] (bool): Whether to divide the ratings by the standard deviation during normalization, see section 2.B.3 of our report
+
+            config["model_config"] (dict): Model configuration dictionary
+            config["model_config"]["type"] (str): Model type, "gmf", "mlp" or "both", always "both" in our experiments, "gmf" and "mlp" implement the submodels as standalone models
+
+            config["model_config"]["gmf"] (dict): GMF configuration dictionary
+            config["model_config"]["gmf"]["embed_dim"] (int): Embedding dimension for GMF
+            config["model_config"]["gmf"]["dropout"] (float): Dropout rate for GMF, applied after the embedding layer
+            config["model_config"]["gmf"]["use_interactions"] (bool): Whether to use interactions in GMF, activates our Extended NCF model for the GMF submodel, see section 2.B of our report
+            config["model_config"]["gmf"]["interaction_type"] (str): Interaction type for GMF, "default", "weight_by_rating" or "split_by_rating", see section 2.B of our report
+            config["model_config"]["gmf"]["separate_embeddings"] (bool): Whether to share the parameters of the embeddings for users (items) and user interations (item interactions) in GMF, see section 2.B of our report
+            config["model_config"]["gmf"]["include_same_hadamards"] (bool): Whether to include user * user_interactions (item * item_interactions) Hadamard products in GMF, see section 2.B.1 of our report
+            config["model_config"]["gmf"]["include_cross_hadamards"] (bool): Whether to include user * item_interactions (item * user_interactions) Hadamard products in GMF, see section 2.B.1 of our report
+            config["model_config"]["gmf"]["include_attention_layer"] (bool): Whether to include an attention layer in GMF, see section 2.B.2 of our report
+            config["model_config"]["gmf"]["n_attention_layers"] (int): Number of attention layers in GMF
+            config["model_config"]["gmf"]["n_heads"] (int): Number of heads in the attention layer in GMF
+            config["model_config"]["gmf"]["include_ffn"] (bool): Whether to include a feed-forward network in GMF
+            config["model_config"]["gmf"]["ff_hidden_dim"] (int): Hidden dimension of the feed-forward network in GMF
+
+            config["model_config"]["mlp"] (dict): MLP configuration dictionary
+            config["model_config"]["mlp"]["embed_dim"] (int): Embedding dimension for MLP
+            config["model_config"]["mlp"]["dropout"] (float): Dropout rate for MLP, applied after the embedding layer
+            config["model_config"]["mlp"]["hidden_dims"] (list): List of hidden dimensions for the MLP, the last element is the output dimension
+            config["model_config"]["mlp"]["use_interactions"] (bool): Whether to use interactions in MLP, activates our Extended NCF model for the MLP submodel, see section 2.B of our report
+            config["model_config"]["mlp"]["interaction_type"] (str): Interaction type for MLP, "default", "weight_by_rating" or "split_by_rating", see section 2.B of our report
+            config["model_config"]["mlp"]["separate_embeddings"] (bool): Whether to share the parameters of the embeddings for users (items) and user interations (item interactions) in MLP, see section 2.B of our report
+            config["model_config"]["mlp"]["include_attention_layer"] (bool): Whether to include an attention layer in MLP, see section 2.B.2 of our report
+            config["model_config"]["mlp"]["n_attention_layers"] (int): Number of attention layers in MLP
+            config["model_config"]["mlp"]["n_heads"] (int): Number of heads in the attention layer in MLP
+            config["model_config"]["mlp"]["include_ffn"] (bool): Whether to include a feed-forward network in MLP
+            config["model_config"]["mlp"]["ff_hidden_dim"] (int): Hidden dimension of the feed-forward network in MLP
+
+        '''
         self.num_users = num_users
         self.num_items = num_items
         self.init_config(config)
