@@ -33,7 +33,7 @@ def load_data(file_path):
     ratings = torch.tensor(ratings).long().to(DEVICE)
     return MovieDataset(users, items, ratings)
 
-def create_train_eval_split(dataset, train_split=0.9, seed=42):
+def create_train_eval_split(dataset, train_split=0.8, seed=42):
     train_size = int(train_split * len(dataset))
     eval_size = len(dataset) - train_size
     generator = torch.Generator().manual_seed(seed)

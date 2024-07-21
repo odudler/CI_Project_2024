@@ -185,12 +185,12 @@ if __name__ == "__main__":
     }[args.model]
 
     rmses = []
-    for i in range(10):
+    for i in range(5):
         torch.manual_seed(i)
         np.random.seed(i)
 
         dataset = load_data("data/data_train.csv")
-        train_dataset, eval_dataset = create_train_eval_split(dataset, train_split=0.9, seed=i)
+        train_dataset, eval_dataset = create_train_eval_split(dataset, train_split=0.8, seed=i)
 
         ncf = NCFTrain(10000, 1000, config=config)
         ncf.train(train_dataset=train_dataset, eval_dataset=eval_dataset)
