@@ -8,3 +8,4 @@ recommenders==1.2.0
 tensorflow==2.16.1
 tf_slim==1.1.0
 myfm==0.3.6
+ray[tune]

@@ -21,6 +21,6 @@ BFM:
   algorithm: ["oprobit"]  
   variational: [False]    
   iteration: [1500]       
-  dimension: [8,24]         
+  dimension: [8,16,24,32,40]         
   use_iu: [True]          
   use_ii: [True] 
