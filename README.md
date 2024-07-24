@@ -43,7 +43,7 @@ Run `python ncf/ncf_train --model {model}`, where `{model}` is either ncf, ncf_e
 
 #### Replicate hyperparameter tuning results for baseline algorithms except NCF
 
-Execute the cells in the notebook 'grid_search.ipynb'. Each parameter search will run on one-fifth of the total data for each model to determine the optimal parameters. The searches will be parallelized across all available cores, and the scores for each parameter set will be printed.
+Execute the cells in the notebook `grid_search.ipynb`. Each parameter search will run on one-fifth of the total data for each model to determine the optimal parameters. The searches will be parallelized across all available cores, and the scores for each parameter set will be printed.
 
 #### Replicate hyperparameter tuning results for NCF algorithm + extended version
 
