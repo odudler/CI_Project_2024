@@ -29,7 +29,7 @@
 - To activate the environment, run:
   - `conda activate {env_name}`
 - Import scikit-surprise via conda, as installing via pip leads to issues:
-  - `conda install conda-forge::scikit-surprise`
+  - `conda install conda-forge::scikit-surprise==1.1.3`
 - Import relevant dependencies using the requirements.txt file:
   - `pip install -r requirements.txt`
  
