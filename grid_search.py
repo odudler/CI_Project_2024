@@ -5,6 +5,7 @@ from itertools import product
 from sklearn.model_selection import KFold
 from models import *
 from utils import *
+from ray import train, tune
 
 #File for running gridsearch / hyperparameter tuning
 
@@ -52,7 +53,7 @@ def get_model(model_name, args):
     else:
         raise ValueError(f"Model: {model_name} doesn't exist")
 
-# Perform k-fold cross-validation for each parameter combination
+
 def perform_grid_search(model_name, data, config_file, n_splits=5):
     '''
     Parameters:
@@ -90,3 +91,44 @@ def perform_grid_search(model_name, data, config_file, n_splits=5):
         print(f"Tested {params}, Score: {avg_score}")
 
     return best_params, best_score
+
+
+def perform_grid_search_with_raytune(model_name, data, config_file, n_splits=5):
+    '''
+    Parameters:
+        model_name(String): Represents name of model used
+        data (df): Data to perform K-Fold cross-val. on
+        config_file (String): path to grid-search parameters
+    Returns:
+        best_params (dict): Parameters leading to best score
+        best_score (float): Best (lowest) achieved score
+    '''
+    config = load_yaml_parameters(config_file)
+
+    kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
+
+    search_space = {}
+    for key in config[model_name].keys():
+        search_space[key] = tune.grid_search(config[model_name][key])
+
+    def objective(params):
+        print(f"Testing {params}")
+
+        scores = []
+        for train_index, test_index in kf.split(data):
+            train_data, test_data = data.iloc[train_index], data.iloc[test_index]
+            args = set_args(params, model_name)
+            model = get_model(model_name, args)
+            model.train(train_data)
+            score = model.predict(test_data, return_loss=True)
+            #print(f"Score: {score}")
+            scores.append(score)
+            break #only do one fold for now, for computational reasons
+
+        avg_score = np.mean(scores)
+        return {'avg_score': avg_score}
+
+    tuner = tune.Tuner(objective, param_space=search_space)  # ③
+    results = tuner.fit()
+
+    return results.get_best_result(metric="avg_score", mode="min").config
