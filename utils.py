@@ -165,6 +165,19 @@ def create_submission_from_array(
     df_sub = df_sub.drop(["row", "col"], axis=1)
     df_sub.to_csv(store_path, columns=["Id", "Prediction"], index=False)
 
+def create_ensemble(paths, store_path="submissions/default.csv"):
+    """
+    Parameters:
+        paths (List): List of paths to submission files to ensemble
+        store_path (String): Path to store submission file
+    """
+    df = pd.read_csv(paths[0])
+    df["Prediction"] = 0
+    for path in paths:
+        df["Prediction"] += pd.read_csv(path)["Prediction"]
+    df["Prediction"] /= len(paths)
+    df.to_csv(store_path, columns=["Id", "Prediction"], index=False)
+
 def calculate_rmse(preds, labels):
     """
     Parameters:
