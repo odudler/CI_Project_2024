@@ -8,6 +8,7 @@ from typing import Literal, Union
 from utils import extract_users_items_predictions
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using {DEVICE} device")
 
 class MovieDataset(Dataset):
     def __init__(self, users, items, ratings):

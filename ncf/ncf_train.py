@@ -14,7 +14,7 @@ from grokfast import gradfilter_ema
 from normalizer import ItemNormalizer, UserNormalizer, BothNormalizer
 from ncf_models import NeuMF
 from ncf_utils import load_data, create_train_eval_split, DEVICE
-from ncf_configs import ncf_config, ncf_extended_config, ncf_extended_attention_config
+from ncf_configs import ncf_config, ncf_extended_config, ncf_extended_attention_config, ncf_extended_same_config, ncf_extended_cross_config, ncf_extended_same_cross_config, ncf_extended_gmf_config, ncf_extended_mlp_config, ncf_extended_gmf_int_default_config, ncf_extended_gmf_int_weight_config, ncf_extended_mlp_int_weight_config, ncf_extended_mlp_int_split_config, ncf_extended_no_int_config
 
 
 class NCFTrain():
@@ -223,13 +223,23 @@ class NCFTrain():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, default="ncf") # ncf, ncf_extended, ncf_extended_attention
+    parser.add_argument("--model", type=str, default="ncf") # ncf, ncf_extended, ncf_extended_attention, ncf_extended_same, ncf_extended_cross, ncf_extended_same_cross, ncf_extended_gmf, ncf_extended_mlp, ncf_extended_gmf_int_default, ncf_extended_gmf_int_weight, ncf_extended_mlp_int_weight, ncf_extended_mlp_int_split, ncf_extended_no_int
     args = parser.parse_args()
 
     config = {
         "ncf": ncf_config,
         "ncf_extended": ncf_extended_config,
-        "ncf_extended_attention": ncf_extended_attention_config
+        "ncf_extended_attention": ncf_extended_attention_config,
+        "ncf_extended_same": ncf_extended_same_config,
+        "ncf_extended_cross": ncf_extended_cross_config,
+        "ncf_extended_same_cross": ncf_extended_same_cross_config,
+        "ncf_extended_gmf": ncf_extended_gmf_config,
+        "ncf_extended_mlp": ncf_extended_mlp_config,
+        "ncf_extended_gmf_int_default": ncf_extended_gmf_int_default_config,
+        "ncf_extended_gmf_int_weight": ncf_extended_gmf_int_weight_config,
+        "ncf_extended_mlp_int_weight": ncf_extended_mlp_int_weight_config,
+        "ncf_extended_mlp_int_split": ncf_extended_mlp_int_split_config,
+        "ncf_extended_no_int": ncf_extended_no_int_config
     }[args.model]
 
     rmses = []

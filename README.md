@@ -41,7 +41,23 @@ Changing the first string parameter to any of ['SVDplusplus', 'SVDsimple', 'BFM'
 
 #### Replicate Submission Files for NCF algorithm + extended version
 
-Run `python ncf/ncf_train.py --model {model}`, where `{model}` is either 'ncf', 'ncf_extended' or 'ncf_extended_attention' to run training for these three models. Each model will be trained five times on five different train-validation splits with 80% training data. The script will print the mean RMSE and the standard deviation of the RMSE over these five runs. We take the model that achieved the lowest validation RMSE during training for each of the five runs as the final model of that run. The code will also generate submission files for the best model each run.
+Run `python ncf/ncf_train.py --model {model}`, where `{model}` is in:
+
+- `ncf`: Base Neural Collaborative Filtering
+- `ncf_extended`: Extended Neural Collaborative Filtering (Our best model)
+- `ncf_extended_attention`: Extended Neural Collaborative Filtering with attention
+- `ncf_extended_same`: Extended Neural Collaborative Filtering including User-User and Item-Item similarities in the GMF model
+- `ncf_extended_cross`: Extended Neural Collaborative Filtering including User-Item and Item-User similarities in the GMF model
+- `ncf_extended_same_cross`: Extended Neural Collaborative Filtering including User-User, Item-Item, User-Item and Item-User similarities in the GMF model
+- `ncf_extended_gmf`: Standalone GMF model of Extended Neural Collaborative Filtering
+- `ncf_extended_mlp`: Standalone MLP model of Extended Neural Collaborative Filtering
+- `ncf_extended_gmf_int_default`: Extended Neural Collaborative Filtering with 'average' aggregation method in the GMF model
+- `ncf_extended_gmf_int_weight`: Extended Neural Collaborative Filtering with 'weight by rating' aggregation method in the GMF model
+- `ncf_extended_mlp_int_weight`: Extended Neural Collaborative Filtering with 'weight by rating' aggregation method in the MLP model
+- `ncf_extended_mlp_int_split`: Extended Neural Collaborative Filtering with 'split by rating' aggregation method in the MLP model
+- `ncf_extended_no_int`: Extended Neural Collaborative Filtering without any aggregated embeddings
+
+to run training for these models. Each model will be trained five times on five different train-validation splits with 80% training data. The script will print the mean RMSE and the standard deviation of the RMSE over these five runs. We take the model that achieved the lowest validation RMSE during training for each of the five runs as the final model of that run. The code will also generate submission files for the best model each run. The first three models are used for the results in the main paper, while the rest are used for the more detailed experiments in the appendix.
 
 #### Replicate hyperparameter tuning results for baseline algorithms except NCF
 
